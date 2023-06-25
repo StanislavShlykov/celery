@@ -1,0 +1,30 @@
+<!--  наследуемся от шаблона default.html, который мы создавали для flatpages -->
+{% extends 'flatpages/base.html' %}
+{% load custom_filters %}
+
+<!-- Название у нас будет products -->
+{% block title %}
+НОВОСТИ
+{% endblock title %}
+
+<!-- В контенте на странице мы выводим все товары -->
+{% block content %}
+<h1>{{ news.post_name | censor }}</h1>
+{{ news.time_in | date:"DATETIME_FORMAT"}} <br>
+{% for category in news.category.values %}
+    {{ category.cat_name }} <br>
+{%endfor%}
+{{ news.post_text | censor }} <br>
+{% for category in news.category.values %}
+
+<form method="GET" name="callback" action="sign_me/">
+    {% csrf_token %}
+  <input type="hidden" name="category" value="{{ category.cat_name }}">
+  <button type="submit" name="Подписаться"> Подписаться на новости  по теме {{ category.cat_name }}!</button>
+</form>
+
+<!--<button> value="{{ el.id }}" Подписаться на новости  по теме {{ category.cat_name }}!</a> </button>-->
+<!--<button type="submit" name="Подписаться" value="{{ category }}"><a href="sign_me/">Подписаться на новости  по теме {{ category.cat_name }}!</a></button>-->
+<!--<button> name="Подписаться" value="{{ category }}"<a href="sign_me/">Подписаться на новости  по теме {{ category.cat_name }}!</a> </button><a href="sign_me/">-->
+{%endfor%}
+{% endblock content %}

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новая Статья</title>
+</head>
+<body>
+    <h1>Появилась новая статья по вашей подписке {{ news.post_name }}!</h1>
+    <h3>{{ news.post_text|truncatechars:50 }}</h3>
+    <h3>Пройдите по ссылке, чтобы посмотреть ее полностью <a href='http://127.0.0.1:8000/news/{{news.id}}'>ссылка</a></h3>
+
+</body>
+</html>

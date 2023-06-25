@@ -1,0 +1,59 @@
+{% extends 'flatpages/base.html' %}
+{% load custom_filters %}
+{% load custom_tags %}
+
+
+{% block title %}
+Статьи
+{% endblock title %}
+
+{% block content %}
+   <h1>Новости</h1>
+
+   <hr>
+   {% if catList_7 %}
+    <h2>{{catList_7|length}}</h2>
+       <table>
+           <tr>
+               <td><h2>Название</h2></td>
+               <td><h2>Дата</h2></td>
+               <td><h2>Текст</h2></td>
+               <td><h2>Автор</h2></td>
+
+           </tr>
+
+           {% for news in catList_7 %}
+           <tr>
+
+               <td><a href="/news/{{news.id}}">{{ news.post_name | censor }}</a></td>
+               <td>{{ news.time_in| date:'DATETIME_FORMAT' }}</td>
+               <td>{{ news.post_text|truncatechars:30 | censor }}</td>
+
+               <td>{{ news.author.name }}</td>
+
+           </tr>
+           {% endfor %}
+
+       </table>
+   {% else %}
+       <h2>Новостей нет!</h2>
+   {% endif %}
+{% if page_obj.has_previous %}
+       {# Для каждой ссылки пагинации указываем обработку через новый тег #}
+       <a href="?{% url_replace page=1 %}">1</a>
+       {% if page_obj.previous_page_number != 1 %}
+           ...
+           <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+       {% endif %}
+   {% endif %}
+
+   {{ page_obj.number }}
+
+   {% if page_obj.has_next %}
+       <a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+       {% if paginator.num_pages != page_obj.next_page_number %}
+           ...
+           <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
+       {% endif %}
+   {% endif %}
+{% endblock content %}
