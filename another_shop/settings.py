@@ -169,7 +169,6 @@ EMAIL_HOST_USER = 'sshlykov3'
 EMAIL_HOST_PASSWORD = 'iWU3qmUkpfCMmYrmAwED'
 EMAIL_USE_SSL = False
 EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER + '@mail.ru'
 DEFAULT_FROM_EMAIL = 'sshlykov3@mail.ru'
 
 CELERY_BROKER_URL = 'redis://default:vfiLZmhdtXTj1TrD2bgxgtWIpW3fLVVR@redis-14188.c279.us-central1-1.gce.cloud.redislabs.com:14188'
@@ -180,16 +179,130 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-# EMAIL_HOST = 'smtp.mail.ru'
-# EMAIL_PORT = 2525
-# EMAIL_HOST_USER = 'sshlykov3'
-# EMAIL_HOST_PASSWORD = 's3hxvrn3Ec460qtURuev'
-# EMAIL_USE_SSL = False
-# EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER + '@mail.ru'
-# 'sshlykov3@mail.ru'
 MANAGERS = [('Stas', 'sshlykov3@yandex.ru'), ]
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'cache_files'),
+    }
+}
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'style': '{',
+    'formatters': {
+        'deb': {
+            'format': '%(asctime)s %(levelname)s %(message)s'
+        },
+        'war': {
+            'format': '%(asctime)s - %(levelname)s - %(message)s - %{pathname)s'
+        },
+        'err': {
+            'format': '%(asctime)s - %(levelname)s - %(message)s - %{pathname)s - %{exc_info)s'
+        },
+        'file_info': {
+            'format': '%(asctime)s - %(levelname)s - %(module)s - %{message)s'
+        },
+        'file_err': {
+            'format': '%(asctime)s - %(levelname)s - %(message)s - %{pathname)s - %{exc_info)s'
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'cons_deb': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'deb'
+        },
+        'cons_war': {
+            'level': 'WARNING',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'war'
+        },
+        'cons_err': {
+            'level': 'ERROR',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'err'
+        },
+        'file_gen': {
+            # 'level': 'INFO',
+            'filters': ['require_debug_false'],
+            'class': 'logging.FileHandler',
+            'formatter': 'file_info',
+            'filename': 'general.log'
+        },
+        'file_err': {
+            # 'level': 'ERROR',
+            # 'filters': ['require_debug_true'],
+            'class': 'logging.FileHandler',
+            'formatter': 'file_err',
+            'filename': 'errors.log'
+        },
+        'file_sec': {
+            # 'level': 'ERROR',
+            # 'filters': ['require_debug_true'],
+            'class': 'logging.FileHandler',
+            'formatter': 'file_info',
+            'filename': 'security.log'
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'formatter': 'war',
+            'class': 'django.utils.log.AdminEmailHandler'
+        }
+    },
+    'loggers': {
+        'console': {
+            'handlers': ['cons_deb', 'cons_war', 'cons_err'],
+            'propagate': True,
+        },
+        'file_info': {
+            'handlers': ['file_gen'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.security': {
+            'handlers': ['file_sec'],
+            # 'level': 'ERROR',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['mail_admins', 'file_err'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['mail_admins', 'file_err'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.template': {
+            'handlers': ['file_err'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.backends': {
+            'handlers': ['file_err'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    }
+}
 
 
 
+# django.request, django.server, django.template, django.db.backends
