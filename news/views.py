@@ -1,34 +1,27 @@
 from datetime import datetime
-
 from django.shortcuts import render, HttpResponse
-from django.template.loader import render_to_string
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
-from .models import Post, Category, Author
+from .models import Post, Category
 from .filters import PostFilter
 from django.urls import reverse_lazy
 from .forms import PostForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
 from board.tasks import mail_new
+import logging
 
+logger_cons = logging.getLogger('django')
+# logger_info = logging.getLogger('file1')
 
-# def notify_users_news(sender, instance, created, **kwargs):
-#     if created:
-#         subject = f'{instance.post_name}'
-#         message = f'{instance.post_text}'
-#     else:
-#         subject = f'changed for {instance.post_name}'
-#         message = f'changed for {instance.post_text}'
-#     mail_managers(
-#         subject= subject,
-#         message= message
-#     )
-#
-# post_save.connect(notify_users_news, sender=Post)
-
+# @cache_page(100)
 def content(request):
+
+    logger_cons.info('cons_information')
+    # logger_cons.error('error logger')
     return render(request, 'flatpages/main.html')
 
-
+@cache_page(100)
 def cat_week(request, cat_id):
     today = datetime.today()
     week = today.strftime("%V")
@@ -71,6 +64,12 @@ class NewsDetail(LoginRequiredMixin, DetailView):
     model = Post
     template_name = 'news.html'
     context_object_name = 'news'
+    def get_object(self, *args, **kwargs):
+        obj = cache.get(f'news - {self.kwargs["pk"]}', None)
+        if not obj:
+            obj = super().get_object(queryset=self.queryset)
+            cache.set(f'news - {self.kwargs["pk"]}', obj)
+        return obj
 
 
 class ArticlesDetail(LoginRequiredMixin, DetailView):
@@ -86,33 +85,38 @@ class PostCreate(LoginRequiredMixin, CreateView):
     model = Post
     template_name = 'post_edit.html'
 
-    def post(self, request, *args, **kwargs):
-        news = Post(
-            post_name=request.POST['post_name'],
-            post_text=request.POST['post_text'],
-            author=Author.objects.get(id=request.POST['author']),
-        )
-        news.save()
-        category_id = request.POST.getlist('category')
-        for cat in category_id:
-            news.category.add(Category.objects.get(pk=cat))
-        categories = news.category.all()
-        mail_new(categories, news)
-        # subs_email = []
-        # for categ in categories:
-        #     subs_users = categ.users.all()
-        #     for s_users in subs_users:
-        #         subs_email.append(s_users.email)
-        # html_content = render_to_string('sign/hello.html', {'news': news})
-        # send_mail(
-        #     subject=f'новая статья {news.post_name}',
-        #     message=None,
-        #     from_email=DEFAULT_FROM_EMAIL,
-        #     recipient_list=subs_email,
-        #     html_message=html_content,
-        #     fail_silently=True
-        # )
-        return super().post(request, *args, **kwargs)
+    def form_valid(self, form):
+        post = form.save()
+        mail_new.delay(post.pk)
+        return super().form_valid(form)
+
+    # def post(self, request, *args, **kwargs):
+    #     news = Post(
+    #         post_name=request.POST['post_name'],
+    #         post_text=request.POST['post_text'],
+    #         author=Author.objects.get(id=request.POST['author']),
+    #     )
+    #     news.save()
+    #     category_id = request.POST.getlist('category')
+    #     for cat in category_id:
+    #         news.category.add(Category.objects.get(pk=cat))
+    #     categories = news.category.all()
+    #     mail_new(categories, news)
+    #     # subs_email = []
+    #     # for categ in categories:
+    #     #     subs_users = categ.users.all()
+    #     #     for s_users in subs_users:
+    #     #         subs_email.append(s_users.email)
+    #     # html_content = render_to_string('sign/hello.html', {'news': news})
+    #     # send_mail(
+    #     #     subject=f'новая статья {news.post_name}',
+    #     #     message=None,
+    #     #     from_email=DEFAULT_FROM_EMAIL,
+    #     #     recipient_list=subs_email,
+    #     #     html_message=html_content,
+    #     #     fail_silently=True
+    #     # )
+    #     return super().post(request, *args, **kwargs)
 
 
 class NewsCreate(PermissionRequiredMixin, CreateView):
@@ -124,6 +128,7 @@ class NewsCreate(PermissionRequiredMixin, CreateView):
     def form_valid(self, form):
         post = form.save(commit=False)
         post.type = True
+        mail_new.delay(post.pk)
         return super().form_valid(form)
 
 
