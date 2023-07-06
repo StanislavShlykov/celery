@@ -193,67 +193,57 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'style': '{',
-    'formatters': {
-        'deb': {
-            'format': '%(asctime)s %(levelname)s %(message)s'
+    "formatters": {
+        "deb": {"format": "%(asctime)s %(levelname)s %(message)s"},
+        "war": {"format": "%(asctime)s - %(levelname)s - %(message)s - %{pathname)s"},
+        "err": {"format": "%(asctime)s - %(levelname)s - %(message)s - %{pathname)s - %{exc_info)s"},
+        "file_info": {"format": "%(asctime)s - %(levelname)s - %(module)s - %{message)s"},
+        "file_err": {"format": "%(asctime)s - %(levelname)s - %(message)s - %{pathname)s - %{exc_info)s"},
+    },
+    "filters": {
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
         },
-        'war': {
-            'format': '%(asctime)s - %(levelname)s - %(message)s - %{pathname)s'
-        },
-        'err': {
-            'format': '%(asctime)s - %(levelname)s - %(message)s - %{pathname)s - %{exc_info)s'
-        },
-        'file_info': {
-            'format': '%(asctime)s - %(levelname)s - %(module)s - %{message)s'
-        },
-        'file_err': {
-            'format': '%(asctime)s - %(levelname)s - %(message)s - %{pathname)s - %{exc_info)s'
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
         },
     },
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
+    "handlers": {
+        "cons_deb": {
+            "level": "DEBUG",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+            "formatter": "deb",
         },
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
+        "cons_war": {
+            "level": "WARNING",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+            "formatter": "war",
         },
-    },
-    'handlers': {
-        'cons_deb': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'deb'
-        },
-        'cons_war': {
-            'level': 'WARNING',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'war'
-        },
-        'cons_err': {
-            'level': 'ERROR',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'err'
+        "cons_err": {
+            "level": "ERROR",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+            "formatter": "err",
         },
         'file_gen': {
-            # 'level': 'INFO',
+            'level': 'INFO',
             'filters': ['require_debug_false'],
             'class': 'logging.FileHandler',
             'formatter': 'file_info',
             'filename': 'general.log'
         },
         'file_err': {
-            # 'level': 'ERROR',
-            # 'filters': ['require_debug_true'],
+            'level': 'ERROR',
+            'filters': ['require_debug_true'],
             'class': 'logging.FileHandler',
             'formatter': 'file_err',
             'filename': 'errors.log'
         },
         'file_sec': {
-            # 'level': 'ERROR',
-            # 'filters': ['require_debug_true'],
+            'level': 'ERROR',
+            'filters': ['require_debug_true'],
             'class': 'logging.FileHandler',
             'formatter': 'file_info',
             'filename': 'security.log'
@@ -265,20 +255,15 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         }
     },
-    'loggers': {
-        'console': {
-            'handlers': ['cons_deb', 'cons_war', 'cons_err'],
-            'propagate': True,
-        },
-        'file_info': {
-            'handlers': ['file_gen'],
-            'level': 'INFO',
-            'propagate': True,
+    "loggers": {
+        "django": {
+            "handlers": ["cons_deb", "cons_war", "cons_err", "file_gen"],
+            "propagate": True,
         },
         'django.security': {
             'handlers': ['file_sec'],
-            # 'level': 'ERROR',
-            'propagate': True,
+            'level': 'ERROR',
+            'propagate': False,
         },
         'django.request': {
             'handlers': ['mail_admins', 'file_err'],
@@ -300,9 +285,5 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-    }
+    },
 }
-
-
-
-# django.request, django.server, django.template, django.db.backends
